@@ -1,4 +1,4 @@
-package com.lilbaek.simply.database;
+package com.lilbaek.simply.simply;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.lang.Nullable;
@@ -7,6 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface QuerySpec {
+    /**
+     * Bind a named statement parameter for ":x" placeholder resolution, with each "x" name matching a ":x" placeholder in the SQL statement.
+     * Params:
+     * name – the parameter name value – the parameter value to bind
+     */
     QuerySpec param(String name, @Nullable Object value);
 
     /**
@@ -44,7 +49,7 @@ public interface QuerySpec {
     <T> Optional<T> optional(final Class<T> cls);
 
     /**
-     * Transforms a query result to a Java record.
+     * Transforms a query result to list of Java records.
      * Supports @Column, @Convert and @Transient annotations
      *
      * @param cls   result type

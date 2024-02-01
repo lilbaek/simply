@@ -3,11 +3,16 @@ package com.lilbaek.simply.model;
 import com.lilbaek.simply.converters.YNToBooleanConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import org.springframework.context.annotation.Primary;
 
 import java.time.LocalDate;
 
+@Entity(name = "Post")
 public record Post(
                 @Column(name = "id")
+                @Id
                 String id,
                 @Column(name = "title")
                 String title,

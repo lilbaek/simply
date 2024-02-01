@@ -1,20 +1,23 @@
 package com.lilbaek.simply.service;
 
-import com.lilbaek.simply.database.DbClient;
+import com.lilbaek.simply.model.PostIdClass;
+import com.lilbaek.simply.simply.DBClient;
 import com.lilbaek.simply.model.Post;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.List;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
 public class PostService {
-    private final DbClient dbClient;
+    private final DBClient dbClient;
+    private final TransactionTemplate transactionTemplate;
 
-    public PostService(DbClient dbClient) {
+    public PostService(DBClient dbClient, PlatformTransactionManager transactionManager) {
         this.dbClient = dbClient;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
     public Optional<Post> findById(final String id) {
@@ -28,27 +31,33 @@ public class PostService {
     }
 
     public void create(final Post post) {
-        int update = dbClient.sql("INSERT INTO post(id,title,slug,enabled,date,time_to_read,tags) values(?,?,?,?,?,?,?)")
-                        .statementSpec()
-                        .params(List.of(post.id(), post.title(), post.slug(), post.enabled() ? "Y": "N", post.date(), post.timeToRead(), post.tags()))
-                        .update();
-        Assert.state(update == 1, "Failed to create post " + post.title());
+        transactionTemplate.execute(status -> {
+            dbClient.insert(post);
+            update(post, post.id());
+            return "";
+        });
+        try {
+            transactionTemplate.execute(status -> {
+                delete(post.id());
+                return "";
+            });
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        Optional<Post> byId = findById(post.id());
+        System.out.println(byId);
     }
 
     public void update(final Post post, final String id) {
-        var updated = dbClient.sql("update post set title = ?, slug = ?, enabled = ?, date = ?, time_to_read = ?, tags = ? where id = ?")
-                        .statementSpec()
-                        .params(List.of(post.title(), post.slug(), post.enabled() ? "Y": "N", post.date(), post.timeToRead(), post.tags(), id))
-                        .update();
+        dbClient.updateSingle(new Post(id, post.title(), post.slug(), post.enabled(), post.date(), post.timeToRead(), post.tags()));
 
-        Assert.state(updated == 1, "Failed to update post " + post.title());
+        dbClient.updateSingle(new Post(id, post.title(), post.slug(), post.enabled(), post.date(), post.timeToRead(), post.tags()),
+                        new PostIdClass(id, true));
+
     }
 
     public void delete(final String id) {
-        var updated = dbClient.sql("delete from post where id = :id")
-                        .statementSpec()
-                        .param("id", id)
-                        .update();
-        Assert.state(updated == 1, "Failed to delete post " + id);
+        dbClient.deleteSingle(Post.class, new PostIdClass(id, false));
+        dbClient.deleteSingle(new Post(id, "", "", false, LocalDate.MAX, 1, ""));
     }
 }
