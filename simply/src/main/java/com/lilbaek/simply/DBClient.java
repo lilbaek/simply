@@ -4,6 +4,7 @@ import com.lilbaek.simply.sql.DeleteBuilder;
 import com.lilbaek.simply.sql.InsertBuilder;
 import com.lilbaek.simply.sql.SchemaReplacer;
 import com.lilbaek.simply.sql.SqlStatement;
+import com.lilbaek.simply.sql.StatementLogger;
 import com.lilbaek.simply.sql.UpdateBuilder;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.util.Assert;
@@ -13,10 +14,12 @@ import java.util.Optional;
 public class DBClient {
     private final JdbcClient jdbcClient;
     private final SchemaReplacer schemaReplacer;
+    private final StatementLogger statementLogger;
 
-    public DBClient(final JdbcClient jdbcClient, final SchemaReplacer schemaReplacer) {
+    public DBClient(final JdbcClient jdbcClient, final SchemaReplacer schemaReplacer, final StatementLogger statementLogger) {
         this.jdbcClient = jdbcClient;
         this.schemaReplacer = schemaReplacer;
+        this.statementLogger = statementLogger;
     }
 
     /**
@@ -27,7 +30,8 @@ public class DBClient {
      * @return the new query instance
      */
     public QuerySpec sql(final String sqlString) {
-        return new QuerySpecImpl(jdbcClient.sql(schemaReplacer.replaceSchema(sqlString)));
+        final String sql = schemaReplacer.replaceSchema(sqlString);
+        return new QuerySpecImpl(jdbcClient.sql(sql), sql, statementLogger);
     }
 
     /***
@@ -121,6 +125,8 @@ public class DBClient {
     }
 
     private JdbcClient.StatementSpec getSqlFromStatement(final SqlStatement statement) {
-        return jdbcClient.sql(schemaReplacer.replaceSchema(statement.sql()));
+        final String sql = schemaReplacer.replaceSchema(statement.sql());
+        statementLogger.logStatement(sql, statement.values());
+        return jdbcClient.sql(sql);
     }
 }

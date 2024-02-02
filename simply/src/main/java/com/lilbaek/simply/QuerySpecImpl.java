@@ -1,6 +1,7 @@
 package com.lilbaek.simply;
 
 import com.lilbaek.simply.sql.ResultToRecordTransformer;
+import com.lilbaek.simply.sql.StatementLogger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -10,25 +11,33 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class QuerySpecImpl implements QuerySpec {
     private final JdbcClient.StatementSpec query;
+    private final String sql;
+    private final StatementLogger logger;
+    private final Map<String, Object> parms = new HashMap<>();
 
-    public QuerySpecImpl(final JdbcClient.StatementSpec query) {
+    public QuerySpecImpl(final JdbcClient.StatementSpec query, final String sql, final StatementLogger logger) {
         this.query = query;
+        this.sql = sql;
+        this.logger = logger;
     }
 
     @Override
     public QuerySpec param(final String name, final Object value) {
         query.param(name, value);
+        parms.putIfAbsent(name, value);
         return this;
     }
 
     @Override
     public <T> T record(final Class<T> cls) {
-        final List<T> list = getList(query, cls);
+        final List<T> list = getList(cls);
         if (list.isEmpty()) {
             throw new EmptyResultDataAccessException(1);
         }
@@ -42,6 +51,7 @@ public class QuerySpecImpl implements QuerySpec {
     public <T> T value(final Class<T> cls) {
         if (BeanUtils.isSimpleProperty(cls)) {
             final RowMapper<T> rowMapper = new SingleColumnRowMapper<>(cls);
+            logger.logStatement(sql, parms);
             return query.query(rowMapper).single();
         }
         throw new TypeMismatchDataAccessException(cls.getName() + " is not a simple type");
@@ -51,6 +61,7 @@ public class QuerySpecImpl implements QuerySpec {
     public <T> T valueOrNull(final Class<T> cls) {
         if (BeanUtils.isSimpleProperty(cls)) {
             final RowMapper<T> rowMapper = new SingleColumnRowMapper<>(cls);
+            logger.logStatement(sql, parms);
             return query.query(rowMapper).optional().orElse(null);
         }
         throw new TypeMismatchDataAccessException(cls.getName() + " is not a simple type");
@@ -58,7 +69,7 @@ public class QuerySpecImpl implements QuerySpec {
 
     @Override
     public <T> T recordOrNull(final Class<T> cls) {
-        final List<T> list = getList(query, cls);
+        final List<T> list = getList(cls);
         if (list.isEmpty()) {
             return null;
         }
@@ -75,7 +86,7 @@ public class QuerySpecImpl implements QuerySpec {
 
     @Override
     public <T> List<T> list(final Class<T> cls) {
-        return getList(query, cls);
+        return getList(cls);
     }
 
     @Override
@@ -83,8 +94,9 @@ public class QuerySpecImpl implements QuerySpec {
         return query;
     }
 
-    private <T> List<T> getList(final JdbcClient.StatementSpec query, final Class<T> cls) {
+    private <T> List<T> getList(final Class<T> cls) {
         final var aliasToClassResultTransformer = new ResultToRecordTransformer<>(cls);
+        logger.logStatement(sql, parms);
         final var queryResult = query.query();
         final var columnNames = queryResult.rowSet().getMetaData().getColumnNames();
         final var rows = queryResult.listOfRows();

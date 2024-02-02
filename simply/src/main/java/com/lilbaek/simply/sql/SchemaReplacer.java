@@ -1,7 +1,7 @@
 package com.lilbaek.simply.sql;
 
 public class SchemaReplacer {
-    public static final String SCHEMA_REGEX = "\\{schema}";
+    private static final String SCHEMA_REGEX = "\\{schema}";
     private final String schema;
 
     public SchemaReplacer(final String schema) {
