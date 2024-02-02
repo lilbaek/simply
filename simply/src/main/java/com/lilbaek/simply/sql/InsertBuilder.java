@@ -36,8 +36,6 @@ public class InsertBuilder extends BaseBuilder {
 
     }
 
-
-
     record Metadata(List<Property> properties,
                     Entity entityAnnotation,
                     String statement) {

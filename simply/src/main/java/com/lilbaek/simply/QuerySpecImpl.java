@@ -70,7 +70,7 @@ public class QuerySpecImpl implements QuerySpec {
 
     @Override
     public <T> Optional<T> optional(final Class<T> cls) {
-        return Optional.of(recordOrNull(cls));
+        return Optional.ofNullable(recordOrNull(cls));
     }
 
     @Override

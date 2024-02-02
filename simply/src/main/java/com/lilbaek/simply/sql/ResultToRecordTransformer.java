@@ -1,5 +1,7 @@
 package com.lilbaek.simply.sql;
 
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -56,37 +58,33 @@ public class ResultToRecordTransformer<T> {
 
     // Find and map fields to constructor params.
     private Metadata createMetadata(final String[] columns) {
-        try {
-            final List<Property> propertyMetadata = new ArrayList<>();
-            final var aliasAsList = Arrays.asList(columns);
-            final var properties = MetadataHelper.getProperties(resultClass);
-            final var constructors = resultClass.getConstructors();
-            if (constructors.length != 1) {
-                throw new IllegalArgumentException("Only a single constructor is supported for : %s".formatted(resultClass.getTypeName()));
-            }
-            final var constructor = Arrays.stream(resultClass.getConstructors()).findFirst().orElseThrow();
-            final var parameters = constructor.getParameters();
-            for (final var parameter : parameters) {
-                // find the field and get the corresponding annotations
-                final var match = properties.get(parameter.getName());
-                propertyMetadata.add(new Property(getConstructorParamName(match), parameter.getType(), match.columnAnnotation(), match.idAnnotation(), match.converter(),
-                                match.isTransient()));
-            }
-            final var missingParams = propertyMetadata.stream().filter(x -> !aliasAsList.contains(x.name()) && !x.isTransient()).toList();
-            if (!missingParams.isEmpty()) {
-                throw new IllegalArgumentException(
-                                "The constructor " + resultClass.getTypeName() + " takes more arguments than returned as columns by the query. Arguments not in query: " +
-                                                String.join(",", missingParams.stream()
-                                                                .map(x -> x.name()).toList()));
-            }
-            if (parameters.length == 0) {
-                throw new IllegalArgumentException(
-                                "The constructor " + resultClass.getTypeName() + " takes no arguments. You need to have a minimum of 1 argument in your constructor");
-            }
-            return new Metadata(columns, propertyMetadata, aliasAsList, constructor);
-        } catch (final Exception e) {
-            throw new RuntimeException("Could not create metadata for: " + resultClass.getName(), e);
+        final List<Property> propertyMetadata = new ArrayList<>();
+        final var aliasAsList = Arrays.asList(columns);
+        final var properties = MetadataHelper.getProperties(resultClass);
+        final var constructors = resultClass.getConstructors();
+        if (constructors.length != 1) {
+            throw new InvalidDataAccessApiUsageException("Only a single constructor is supported for : %s".formatted(resultClass.getTypeName()));
         }
+        final var constructor = Arrays.stream(resultClass.getConstructors()).findFirst().orElseThrow();
+        final var parameters = constructor.getParameters();
+        for (final var parameter : parameters) {
+            // find the field and get the corresponding annotations
+            final var match = properties.get(parameter.getName());
+            propertyMetadata.add(new Property(getConstructorParamName(match), parameter.getType(), match.columnAnnotation(), match.idAnnotation(), match.converter(),
+                    match.isTransient()));
+        }
+        final var missingParams = propertyMetadata.stream().filter(x -> !aliasAsList.contains(x.name()) && !x.isTransient()).toList();
+        if (!missingParams.isEmpty()) {
+            throw new InvalidDataAccessApiUsageException(
+                    "The constructor " + resultClass.getTypeName() + " takes more arguments than returned as columns by the query. Arguments not in query: " +
+                            String.join(",", missingParams.stream()
+                                    .map(x -> x.name()).toList()));
+        }
+        if (parameters.length == 0) {
+            throw new InvalidDataAccessApiUsageException(
+                    "The constructor " + resultClass.getTypeName() + " takes no arguments. You need to have a minimum of 1 argument in your constructor");
+        }
+        return new Metadata(columns, propertyMetadata, aliasAsList, constructor);
     }
 
     private String getConstructorParamName(final Property match) {
@@ -102,8 +100,8 @@ public class ResultToRecordTransformer<T> {
     private void check(final String[] aliases, final Metadata metadata) {
         if (!Arrays.equals(aliases, metadata.columns)) {
             throw new IllegalStateException(
-                            "aliases are different from what is cached; aliases=" + Arrays.asList(aliases) +
-                                            " cached=" + Arrays.asList(metadata.columns));
+                    "aliases are different from what is cached; aliases=" + Arrays.asList(aliases) +
+                            " cached=" + Arrays.asList(metadata.columns));
         }
     }
 
