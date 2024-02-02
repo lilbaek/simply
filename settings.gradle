@@ -1,1 +1,3 @@
 rootProject.name = 'simply'
+include ':simply'
+include ':spring-tests'
