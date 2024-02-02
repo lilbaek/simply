@@ -1,7 +1,5 @@
 package com.lilbaek.simply.sql;
 
-import jakarta.persistence.Entity;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,14 +58,13 @@ public class DeleteBuilder extends BaseBuilder {
     }
 
     private static Metadata createMetadata(final Class<?> cls) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
-        final var entityAnnotation = getInstanceEntityAnnotation(cls);
+        final var entityAnnotation = getInstanceTableAnnotation(cls);
         final var properties = getInstanceProperties(cls);
         final String statement = "DELETE FROM {schema}" + entityAnnotation.name() + " WHERE ";
-        return new Metadata(properties.values().stream().toList(), entityAnnotation, statement);
+        return new Metadata(properties.values().stream().toList(), statement);
     }
 
     record Metadata(List<Property> properties,
-                    Entity entityAnnotation,
                     String statement) {
 
     }

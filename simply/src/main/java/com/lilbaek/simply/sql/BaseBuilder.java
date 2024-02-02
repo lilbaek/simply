@@ -1,8 +1,9 @@
 package com.lilbaek.simply.sql;
 
 import com.lilbaek.simply.exceptions.NoIdException;
+import com.lilbaek.simply.exceptions.NoTableException;
 import com.lilbaek.simply.exceptions.NotAnEntityException;
-import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.TypeMismatchDataAccessException;
 
@@ -23,12 +24,21 @@ public abstract class BaseBuilder {
         return properties;
     }
 
-    protected static Entity getInstanceEntityAnnotation(final Class<?> cls) {
+    private static void validateEntityAnnotation(final Class<?> cls) {
         final var entityAnnotation = MetadataHelper.getEntityAnnotation(cls);
         if (entityAnnotation == null) {
             throw new NotAnEntityException(cls.getName());
         }
-        return entityAnnotation;
+    }
+
+
+    protected static Table getInstanceTableAnnotation(final Class<?> cls) {
+        validateEntityAnnotation(cls);
+        final var table = MetadataHelper.getTableAnnotation(cls);
+        if (table == null) {
+            throw new NoTableException(cls.getName());
+        }
+        return table;
     }
 
     protected static StringBuilder getConditionFromColumns(final Object instance, final ArrayList<Object> values, final Collection<Property> properties, final boolean onlyIdColumns)

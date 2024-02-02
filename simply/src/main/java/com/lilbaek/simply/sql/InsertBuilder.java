@@ -1,7 +1,5 @@
 package com.lilbaek.simply.sql;
 
-import jakarta.persistence.Entity;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +30,7 @@ public class InsertBuilder extends BaseBuilder {
     }
 
     private static Metadata createMetadata(final Class<?> instance) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
-        final var entityAnnotation = getInstanceEntityAnnotation(instance);
+        final var entityAnnotation = getInstanceTableAnnotation(instance);
         final var properties = getInstanceProperties(instance);
         final var props = properties.entrySet();
         final String statement = "INSERT INTO {schema}" + entityAnnotation.name() + "(" +
@@ -40,12 +38,11 @@ public class InsertBuilder extends BaseBuilder {
                 ") VALUES (" +
                 String.join(",", props.stream().filter(MetadataHelper::filterTransient).map(stringPropertyEntry -> "?").toList()) +
                 ")";
-        return new Metadata(properties.values().stream().toList(), entityAnnotation, statement);
+        return new Metadata(properties.values().stream().toList(), statement);
 
     }
 
     record Metadata(List<Property> properties,
-                    Entity entityAnnotation,
                     String statement) {
 
     }

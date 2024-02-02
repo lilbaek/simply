@@ -6,12 +6,10 @@ import com.lilbaek.simply.sql.SchemaReplacer;
 import com.lilbaek.simply.sql.SqlStatement;
 import com.lilbaek.simply.sql.UpdateBuilder;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.Optional;
 
-@Service
 public class DBClient {
     private final JdbcClient jdbcClient;
     private final SchemaReplacer schemaReplacer;

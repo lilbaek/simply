@@ -5,10 +5,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 
-@Entity(name = "Post")
+@Entity
+@Table(name = "Post")
 public record Post(
                 @Column(name = "id")
                 @Id

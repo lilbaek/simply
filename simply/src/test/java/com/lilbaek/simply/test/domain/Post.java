@@ -4,13 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-@Entity(name = "Post")
+@Entity
+@Table(name = "Post")
 public record Post(
         @Column(name = "id")
         @Id

@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import java.lang.reflect.AnnotatedElement;
@@ -70,6 +71,10 @@ public class MetadataHelper {
 
     public static Entity getEntityAnnotation(final AnnotatedElement ae) {
         return ae.getAnnotation(Entity.class);
+    }
+
+    public static Table getTableAnnotation(final AnnotatedElement ae) {
+        return ae.getAnnotation(Table.class);
     }
 
     // Find the second generic argument in a AttributeConverter<boolean, String> (Will return String in this case)
