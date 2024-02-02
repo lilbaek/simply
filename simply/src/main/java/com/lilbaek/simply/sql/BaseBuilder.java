@@ -2,7 +2,6 @@ package com.lilbaek.simply.sql;
 
 import com.lilbaek.simply.exceptions.NoIdException;
 import com.lilbaek.simply.exceptions.NoTableException;
-import com.lilbaek.simply.exceptions.NotAnEntityException;
 import jakarta.persistence.Table;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.TypeMismatchDataAccessException;
@@ -24,16 +23,7 @@ public abstract class BaseBuilder {
         return properties;
     }
 
-    private static void validateEntityAnnotation(final Class<?> cls) {
-        final var entityAnnotation = MetadataHelper.getEntityAnnotation(cls);
-        if (entityAnnotation == null) {
-            throw new NotAnEntityException(cls.getName());
-        }
-    }
-
-
     protected static Table getInstanceTableAnnotation(final Class<?> cls) {
-        validateEntityAnnotation(cls);
         final var table = MetadataHelper.getTableAnnotation(cls);
         if (table == null) {
             throw new NoTableException(cls.getName());
