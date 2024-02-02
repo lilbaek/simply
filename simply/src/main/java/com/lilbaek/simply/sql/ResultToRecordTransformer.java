@@ -24,7 +24,14 @@ public class ResultToRecordTransformer<T> {
 
     public T map(final Map<String, Object> data, final String[] columns) {
         try {
-            final var metadata = mapperCache.computeIfAbsent(resultClass, key -> createMetadata(columns));
+            final var metadata = mapperCache.computeIfAbsent(resultClass, key -> {
+                try {
+                    return createMetadata(columns);
+                } catch (InvocationTargetException | InstantiationException | IllegalAccessException |
+                         NoSuchMethodException e) {
+                    throw new RuntimeException("Could not create metadata: " + resultClass.getName(), e);
+                }
+            });
             check(columns, metadata);
             final var constructorArgs = new ArrayList<>();
             for (final var prop : metadata.properties) {
@@ -35,7 +42,7 @@ public class ResultToRecordTransformer<T> {
                 }
             }
             return (T) metadata.constructor.newInstance(constructorArgs.toArray());
-        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        } catch (final InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException("Could not instantiate resultclass: " + resultClass.getName(), e);
         }
     }
@@ -57,7 +64,7 @@ public class ResultToRecordTransformer<T> {
     }
 
     // Find and map fields to constructor params.
-    private Metadata createMetadata(final String[] columns) {
+    private Metadata createMetadata(final String[] columns) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
         final List<Property> propertyMetadata = new ArrayList<>();
         final var aliasAsList = Arrays.asList(columns);
         final var properties = MetadataHelper.getProperties(resultClass);
@@ -78,7 +85,7 @@ public class ResultToRecordTransformer<T> {
             throw new InvalidDataAccessApiUsageException(
                     "The constructor " + resultClass.getTypeName() + " takes more arguments than returned as columns by the query. Arguments not in query: " +
                             String.join(",", missingParams.stream()
-                                    .map(x -> x.name()).toList()));
+                                    .map(Property::name).toList()));
         }
         if (parameters.length == 0) {
             throw new InvalidDataAccessApiUsageException(
@@ -110,23 +117,6 @@ public class ResultToRecordTransformer<T> {
                     List<String> columnsAsList,
                     Constructor<?> constructor) {
 
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        final var that = (ResultToRecordTransformer<T>) o;
-        return resultClass.equals(that.resultClass);
-    }
-
-    @Override
-    public int hashCode() {
-        return resultClass.hashCode();
     }
 }
 

@@ -1,13 +1,14 @@
 package com.lilbaek.simply.test.update;
 
 import com.lilbaek.simply.DBClient;
+import com.lilbaek.simply.exceptions.NoIdException;
 import com.lilbaek.simply.test.domain.Post;
 import com.lilbaek.simply.test.domain.PostIdEnabledClass;
 import com.lilbaek.simply.test.domain.PostType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.TypeMismatchDataAccessException;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -61,9 +62,7 @@ public class UpdateTest {
     @Test
     public void updateWithConditionError() {
         final var update = getUpdateRecord("1");
-        final var exception = assertThrows(IllegalStateException.class, () -> {
-            client.updateSingle(update, new PostIdEnabledClass("9999", true));
-        });
+        final var exception = assertThrows(IllegalStateException.class, () -> client.updateSingle(update, new PostIdEnabledClass("9999", true)));
         assertTrue(exception.getMessage().contains("DBClient - Failed to update Post"));
     }
 
@@ -73,15 +72,28 @@ public class UpdateTest {
         final var update = getUpdateRecord(id);
         final var before = getRecordFromDb(id);
         final var transaction = new TransactionTemplate(transactionManager);
-        final var exception = assertThrows(IllegalStateException.class, () -> {
-            transaction.execute(status -> {
-                client.update(update);
-                client.updateSingle(update, new PostIdEnabledClass("9999", true));
-                return status;
-            });
-        });
+        final var exception = assertThrows(IllegalStateException.class, () -> transaction.execute(status -> {
+            client.update(update);
+            client.updateSingle(update, new PostIdEnabledClass("9999", true));
+            return status;
+        }));
         assertTrue(exception.getMessage().contains("DBClient - Failed to update Post"));
         comparePostRecord(before, getRecordFromDb(id));
+    }
+
+    @Test
+    public void errorIfNoId() {
+        assertThrows(NoIdException.class, () -> client.updateSingle(new DummyClass("1", "")));
+    }
+
+    @Test
+    public void errorIfNoIdCondition() {
+        assertThrows(NoIdException.class, () -> client.updateSingle(new DummyClass("1", ""), new DummyClass("1", "")));
+    }
+
+    @Test
+    public void errorIfConditionIsSimpleType() {
+        assertThrows(TypeMismatchDataAccessException.class, () -> client.updateSingle(getUpdateRecord("1"), 1));
     }
 
     private static Post getUpdateRecord(final String id) {

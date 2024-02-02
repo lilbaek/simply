@@ -1,6 +1,7 @@
 package com.lilbaek.simply.test.insert;
 
 import com.lilbaek.simply.DBClient;
+import com.lilbaek.simply.exceptions.NotAnEntityException;
 import com.lilbaek.simply.test.domain.Post;
 import com.lilbaek.simply.test.domain.PostType;
 import org.junit.jupiter.api.Test;
@@ -50,14 +51,17 @@ public class InsertTest {
     @Test
     public void insertRecordWithExceptionTransaction() {
         final var transaction = new TransactionTemplate(transactionManager);
-        assertThrows(DuplicateKeyException.class, () -> {
-            transaction.execute(status -> {
-                client.insert(getPost());
-                client.insert(getPost());
-                return status;
-            });
-        });
+        assertThrows(DuplicateKeyException.class, () -> transaction.execute(status -> {
+            client.insert(getPost());
+            client.insert(getPost());
+            return status;
+        }));
         assertNull(getRecordFromDbNull("1"));
+    }
+
+    @Test
+    public void errorIfNotEntity() {
+        assertThrows(NotAnEntityException.class, () -> client.insert(new DummyClass()));
     }
 
     private static Post getPost() {

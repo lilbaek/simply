@@ -22,25 +22,21 @@ public class MetadataHelper {
 
     }
 
-    public static LinkedHashMap<String, Property> getProperties(final Class resultClass) {
-        try {
-            final var properties = new LinkedHashMap<String, Property>();
-            for (final var field : resultClass.getDeclaredFields()) {
-                properties.put(field.getName(), new Property(field.getName(),
-                                field.getType(),
-                                getColumnAnnotation(field),
-                                getIdAnnotation(field),
-                                getConverter(field),
-                                getTransientAnnotation(field) != null));
-            }
-            return properties;
-        } catch (final Exception e) {
-            throw new RuntimeException("Could not create metadata for: " + resultClass.getName(), e);
+    public static LinkedHashMap<String, Property> getProperties(final Class resultClass) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
+        final var properties = new LinkedHashMap<String, Property>();
+        for (final var field : resultClass.getDeclaredFields()) {
+            properties.put(field.getName(), new Property(field.getName(),
+                    field.getType(),
+                    getColumnAnnotation(field),
+                    getIdAnnotation(field),
+                    getConverter(field),
+                    getTransientAnnotation(field) != null));
         }
+        return properties;
     }
 
     public static AttributeConverter getConverter(final AnnotatedElement ae)
-                    throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+            throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         final var converter = ae.getAnnotation(Convert.class);
         if (converter != null) {
             return (AttributeConverter) converter.converter().getDeclaredConstructor().newInstance();
@@ -95,7 +91,7 @@ public class MetadataHelper {
     }
 
     public static ArrayList<Object> getValuesFromInstanceForInsert(final Object instance, final List<Property> properties)
-                    throws NoSuchFieldException, IllegalAccessException {
+            throws NoSuchFieldException, IllegalAccessException {
         final var values = new ArrayList<>();
         for (final Property property : properties) {
             if (isTransient(property)) {
@@ -107,7 +103,7 @@ public class MetadataHelper {
     }
 
     public static ArrayList<Object> getValuesFromInstanceForUpdate(final Object instance, final List<Property> properties)
-                    throws NoSuchFieldException, IllegalAccessException {
+            throws NoSuchFieldException, IllegalAccessException {
         final var values = new ArrayList<>();
         for (final Property property : properties) {
             if (isTransient(property) || property.idAnnotation() != null) {
@@ -119,7 +115,7 @@ public class MetadataHelper {
     }
 
     public static Object getFieldValue(final Object instance, final Property property)
-                    throws NoSuchFieldException, IllegalAccessException {
+            throws NoSuchFieldException, IllegalAccessException {
         final var field = instance.getClass().getDeclaredField(property.name());
         field.setAccessible(true);
         if (property.converter() != null) {
