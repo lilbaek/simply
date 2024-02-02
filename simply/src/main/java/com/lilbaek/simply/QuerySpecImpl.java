@@ -35,6 +35,14 @@ public class QuerySpecImpl implements QuerySpec {
         return this;
     }
 
+    public QuerySpec params(final List<?> values) {
+        query.params(values);
+        for (int i = 0; i < values.size(); i++) {
+            parms.putIfAbsent(String.valueOf(i), values.get(i));
+        }
+        return this;
+    }
+
     @Override
     public <T> T record(final Class<T> cls) {
         final List<T> list = getList(cls);

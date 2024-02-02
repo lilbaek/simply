@@ -3,6 +3,7 @@ package com.lilbaek.simply;
 import com.lilbaek.simply.sql.DeleteBuilder;
 import com.lilbaek.simply.sql.InsertBuilder;
 import com.lilbaek.simply.sql.SchemaReplacer;
+import com.lilbaek.simply.sql.SelectBuilder;
 import com.lilbaek.simply.sql.SqlStatement;
 import com.lilbaek.simply.sql.StatementLogger;
 import com.lilbaek.simply.sql.UpdateBuilder;
@@ -20,6 +21,29 @@ public class DBClient {
         this.jdbcClient = jdbcClient;
         this.schemaReplacer = schemaReplacer;
         this.statementLogger = statementLogger;
+    }
+
+    public <T> T findById(final Object id, final Class<T> cls) {
+        final QuerySpecImpl querySpec = prepareFindBy(id, cls);
+        return querySpec.record(cls);
+    }
+
+    public <T> T findByIdOrNull(final Object id, final Class<T> cls) {
+        final QuerySpecImpl querySpec = prepareFindBy(id, cls);
+        return querySpec.recordOrNull(cls);
+    }
+
+    public <T> Optional<T> findByIdOptional(final Object id, final Class<T> cls) {
+        final QuerySpecImpl querySpec = prepareFindBy(id, cls);
+        return querySpec.optional(cls);
+    }
+
+    private <T> QuerySpecImpl prepareFindBy(final Object condition, final Class<T> cls) {
+        final var sqlStatement = SelectBuilder.selectStatement(cls, condition);
+        final String sql = schemaReplacer.replaceSchema(sqlStatement.sql());
+        final QuerySpecImpl querySpec = new QuerySpecImpl(jdbcClient.sql(sql), sql, statementLogger);
+        querySpec.params(sqlStatement.values());
+        return querySpec;
     }
 
     /**
