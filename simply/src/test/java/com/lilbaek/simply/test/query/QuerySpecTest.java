@@ -1,12 +1,12 @@
-package com.lilbaek.simply.test;
+package com.lilbaek.simply.test.query;
 
 import com.lilbaek.simply.DBClient;
 import com.lilbaek.simply.test.domain.PostType;
-import com.lilbaek.simply.test.testdata.PostRecordFromQuery;
-import com.lilbaek.simply.test.testdata.PostRecordNoArgs;
-import com.lilbaek.simply.test.testdata.PostRecordWithConversion;
-import com.lilbaek.simply.test.testdata.PostRecordWithTransient;
-import com.lilbaek.simply.test.testdata.PostRecordWithWrongParams;
+import com.lilbaek.simply.test.query.testdata.PostRecordFromQuery;
+import com.lilbaek.simply.test.query.testdata.PostRecordNoArgs;
+import com.lilbaek.simply.test.query.testdata.PostRecordWithConversion;
+import com.lilbaek.simply.test.query.testdata.PostRecordWithTransient;
+import com.lilbaek.simply.test.query.testdata.PostRecordWithWrongParams;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

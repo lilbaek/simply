@@ -21,28 +21,28 @@ public class PostController {
 
     private final PostService postService;
 
-    public PostController(PostService postService) {
+    public PostController(final PostService postService) {
         this.postService = postService;
     }
 
     @GetMapping("/{id}")
-    Optional<Post> findById(@PathVariable String id) {
+    Optional<Post> findById(@PathVariable final String id) {
         return postService.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    void create(@RequestBody Post post) {
+    void create(@RequestBody final Post post) {
         postService.create(post);
     }
 
     @PutMapping("/{id}")
-    void update(@RequestBody Post post, @PathVariable String id) {
+    void update(@RequestBody final Post post, @PathVariable final String id) {
         postService.update(post, id);
     }
 
     @DeleteMapping("/{id}")
-    void delete(@PathVariable String id) {
+    void delete(@PathVariable final String id) {
         postService.delete(id);
     }
 }

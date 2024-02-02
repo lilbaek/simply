@@ -1,2 +1,40 @@
 ###
+# @name get
 GET http://localhost:8081/api/posts/1234
+accept: application/json
+
+###
+# @name post
+POST http://localhost:8081/api/posts
+accept: application/json
+content-type: application/json
+
+{
+  "id": "1234",
+  "title": "Hello World",
+  "slug": "hello-world",
+  "enabled": true,
+  "date": "2024-02-02",
+  "timeToRead": 1,
+  "tags": "java, spring"
+}
+
+###
+# @name put
+PUT http://localhost:8081/api/posts/1234
+accept: application/json
+content-type: application/json
+
+{
+  "title": "Updated",
+  "slug": "hello-world",
+  "enabled": false,
+  "date": "2024-02-02",
+  "timeToRead": 1,
+  "tags": "java, spring"
+}
+
+###
+# @name delete
+DELETE http://localhost:8081/api/posts/1234
+accept: application/json

@@ -1,4 +1,4 @@
-package com.lilbaek.simply.test.testdata;
+package com.lilbaek.simply.test.query.testdata;
 
 import com.lilbaek.simply.test.domain.PostType;
 import com.lilbaek.simply.test.domain.PostTypeConverter;

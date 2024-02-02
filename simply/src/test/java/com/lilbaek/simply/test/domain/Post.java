@@ -17,17 +17,11 @@ public record Post(
         String id,
         @Column(name = "title")
         String title,
-        @Column(name = "slug")
-        String slug,
         @Column(name = "enabled")
         @Convert(converter = YNToBooleanConverter.class)
         Boolean enabled,
         @Column(name = "date")
         LocalDate date,
-        @Column(name = "time_to_read")
-        int timeToRead,
-        @Column(name = "tags")
-        String tags,
         @Column(name = "type")
         @Convert(converter = PostTypeConverter.class)
         PostType type,
@@ -36,4 +30,3 @@ public record Post(
         @Transient
         List<String> authorIds) {
 }
-

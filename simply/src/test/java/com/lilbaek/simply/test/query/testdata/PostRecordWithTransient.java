@@ -1,4 +1,4 @@
-package com.lilbaek.simply.test.testdata;
+package com.lilbaek.simply.test.query.testdata;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Transient;
