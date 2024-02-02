@@ -1,8 +1,10 @@
 package com.lilbaek.simply;
 
 import com.lilbaek.simply.sql.DeleteBuilder;
-import com.lilbaek.simply.sql.UpdateBuilder;
 import com.lilbaek.simply.sql.InsertBuilder;
+import com.lilbaek.simply.sql.SchemaReplacer;
+import com.lilbaek.simply.sql.SqlStatement;
+import com.lilbaek.simply.sql.UpdateBuilder;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -12,9 +14,11 @@ import java.util.Optional;
 @Service
 public class DBClient {
     private final JdbcClient jdbcClient;
+    private final SchemaReplacer schemaReplacer;
 
-    public DBClient(final JdbcClient jdbcClient) {
+    public DBClient(final JdbcClient jdbcClient, final SchemaReplacer schemaReplacer) {
         this.jdbcClient = jdbcClient;
+        this.schemaReplacer = schemaReplacer;
     }
 
     /**
@@ -25,8 +29,7 @@ public class DBClient {
      * @return the new query instance
      */
     public QuerySpec sql(final String sqlString) {
-        // TODO: Replace {h-schema} with current DB schema!
-        return new QuerySpecImpl(jdbcClient.sql(sqlString));
+        return new QuerySpecImpl(jdbcClient.sql(schemaReplacer.replaceSchema(sqlString)));
     }
 
     /***
@@ -34,7 +37,7 @@ public class DBClient {
      */
     public <T> void insert(final T instance) {
         final var insertStatement = InsertBuilder.insertSql(instance);
-        final var sql = jdbcClient.sql(insertStatement.sql());
+        final var sql = getSqlFromStatement(insertStatement);
         sql.params(insertStatement.values());
         final var update = sql.update();
         Assert.state(update == 1, "DBClient - Failed to insert record %s".formatted(instance));
@@ -74,7 +77,7 @@ public class DBClient {
 
     private <T> int doUpdate(final T instance, final Object conditions) {
         final var updateStatement = UpdateBuilder.updateSql(instance, Optional.ofNullable(conditions));
-        final var sql = jdbcClient.sql(updateStatement.sql());
+        final var sql = getSqlFromStatement(updateStatement);
         sql.params(updateStatement.values());
         return sql.update();
     }
@@ -103,7 +106,7 @@ public class DBClient {
      */
     public <T> int delete(final T instance) {
         final var delete = DeleteBuilder.deleteSql(instance, Optional.empty());
-        final var sql = jdbcClient.sql(delete.sql());
+        final var sql = getSqlFromStatement(delete);
         sql.params(delete.values());
         return sql.update();
     }
@@ -114,8 +117,12 @@ public class DBClient {
      */
     public <T> int delete(final Class<T> cls, final Object conditions) {
         final var delete = DeleteBuilder.deleteSql(cls, conditions);
-        final var sql = jdbcClient.sql(delete.sql());
+        final var sql = getSqlFromStatement(delete);
         sql.params(delete.values());
         return sql.update();
+    }
+
+    private JdbcClient.StatementSpec getSqlFromStatement(final SqlStatement statement) {
+        return jdbcClient.sql(schemaReplacer.replaceSchema(statement.sql()));
     }
 }

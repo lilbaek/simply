@@ -35,8 +35,7 @@ public class InsertBuilder extends BaseBuilder {
         final var entityAnnotation = getInstanceEntityAnnotation(instance);
         final var properties = getInstanceProperties(instance);
         final var props = properties.entrySet();
-        // TODO: Schema name?
-        final String statement = "INSERT INTO " + entityAnnotation.name() + "(" +
+        final String statement = "INSERT INTO {schema}" + entityAnnotation.name() + "(" +
                 String.join(",", props.stream().filter(MetadataHelper::filterTransient).map(MetadataHelper::getColumnName).toList()) +
                 ") VALUES (" +
                 String.join(",", props.stream().filter(MetadataHelper::filterTransient).map(stringPropertyEntry -> "?").toList()) +

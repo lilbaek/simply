@@ -16,8 +16,8 @@ import java.util.Optional;
 public class QuerySpecImpl implements QuerySpec {
     private final JdbcClient.StatementSpec query;
 
-    public QuerySpecImpl(final JdbcClient.StatementSpec spec) {
-        query = spec;
+    public QuerySpecImpl(final JdbcClient.StatementSpec query) {
+        this.query = query;
     }
 
     @Override

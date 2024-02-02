@@ -62,8 +62,7 @@ public class DeleteBuilder extends BaseBuilder {
     private static Metadata createMetadata(final Class<?> cls) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
         final var entityAnnotation = getInstanceEntityAnnotation(cls);
         final var properties = getInstanceProperties(cls);
-        // TODO: Schema name?
-        final String statement = "DELETE FROM " + entityAnnotation.name() + " WHERE ";
+        final String statement = "DELETE FROM {schema}" + entityAnnotation.name() + " WHERE ";
         return new Metadata(properties.values().stream().toList(), entityAnnotation, statement);
     }
 

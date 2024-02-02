@@ -50,8 +50,7 @@ public class UpdateBuilder extends BaseBuilder {
         final var entityAnnotation = getInstanceEntityAnnotation(instance);
         final var properties = getInstanceProperties(instance);
         final var props = properties.entrySet();
-        // TODO: Schema name?
-        final String statement = "UPDATE " + entityAnnotation.name() + " SET " +
+        final String statement = "UPDATE {schema}" + entityAnnotation.name() + " SET " +
                 String.join(",", props.stream().filter(MetadataHelper::filterTransientAndId).map(x -> getColumnName(x) + " = ?").toList()) +
                 " WHERE ";
         return new Metadata(properties.values().stream().toList(), entityAnnotation, statement);
