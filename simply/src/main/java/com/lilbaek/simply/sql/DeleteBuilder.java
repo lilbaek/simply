@@ -1,11 +1,15 @@
 package com.lilbaek.simply.sql;
 
+import org.springframework.beans.BeanUtils;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.lilbaek.simply.sql.MetadataHelper.getColumnName;
 
 public class DeleteBuilder extends BaseBuilder {
     private static final Map<Class<?>, Metadata> mapperCache = new ConcurrentHashMap<>();
@@ -44,11 +48,22 @@ public class DeleteBuilder extends BaseBuilder {
                     throw new RuntimeException("Could not create metadata: " + cls.getName(), e);
                 }
             });
-            return buildStatementWithWhereCondition(cls, metadata.statement, new ArrayList<>(), conditions);
+            if (!BeanUtils.isSimpleProperty(conditions.getClass())) {
+                return buildStatementWithWhereCondition(cls, metadata.statement, new ArrayList<>(), conditions);
+            }
+            final var values = new ArrayList<>();
+            values.add(conditions);
+            return buildStatementWithIdWhereConditionSimpleType(metadata, values);
         } catch (final NoSuchFieldException | IllegalAccessException | InvocationTargetException |
                        InstantiationException | NoSuchMethodException e) {
             throw new RuntimeException("Could not create delete statement: " + cls.getName(), e);
         }
+    }
+
+    private static SqlStatement buildStatementWithIdWhereConditionSimpleType(final Metadata metadata,
+                                                                             final ArrayList<Object> values) {
+        final var first = metadata.properties.stream().filter(x -> x.idAnnotation() != null).findFirst().orElseThrow();
+        return new SqlStatement(metadata.statement + getColumnName(first) + " = ?", values);
     }
 
     private static SqlStatement buildStatementWithIdWhereCondition(final Object instance, final Metadata metadata, final ArrayList<Object> values)

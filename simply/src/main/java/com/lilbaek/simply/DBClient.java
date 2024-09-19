@@ -5,7 +5,6 @@ import com.lilbaek.simply.sql.InsertBuilder;
 import com.lilbaek.simply.sql.SchemaReplacer;
 import com.lilbaek.simply.sql.SelectBuilder;
 import com.lilbaek.simply.sql.SqlStatement;
-import com.lilbaek.simply.sql.StatementLogger;
 import com.lilbaek.simply.sql.UpdateBuilder;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.util.Assert;
@@ -15,9 +14,9 @@ import java.util.Optional;
 public class DBClient {
     private final JdbcClient jdbcClient;
     private final SchemaReplacer schemaReplacer;
-    private final StatementLogger statementLogger;
+    private final Logger statementLogger;
 
-    public DBClient(final JdbcClient jdbcClient, final SchemaReplacer schemaReplacer, final StatementLogger statementLogger) {
+    public DBClient(final JdbcClient jdbcClient, final SchemaReplacer schemaReplacer, final Logger statementLogger) {
         this.jdbcClient = jdbcClient;
         this.schemaReplacer = schemaReplacer;
         this.statementLogger = statementLogger;
@@ -25,12 +24,7 @@ public class DBClient {
 
     public <T> T findById(final Object id, final Class<T> cls) {
         final QuerySpecImpl querySpec = prepareFindBy(id, cls);
-        return querySpec.record(cls);
-    }
-
-    public <T> T findByIdOrNull(final Object id, final Class<T> cls) {
-        final QuerySpecImpl querySpec = prepareFindBy(id, cls);
-        return querySpec.recordOrNull(cls);
+        return querySpec.single(cls);
     }
 
     public <T> Optional<T> findByIdOptional(final Object id, final Class<T> cls) {

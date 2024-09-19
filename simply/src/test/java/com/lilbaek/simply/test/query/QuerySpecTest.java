@@ -2,6 +2,7 @@ package com.lilbaek.simply.test.query;
 
 import com.lilbaek.simply.DBClient;
 import com.lilbaek.simply.test.domain.PostType;
+import com.lilbaek.simply.test.query.testdata.PostRecordAliasFromQuery;
 import com.lilbaek.simply.test.query.testdata.PostRecordFromQuery;
 import com.lilbaek.simply.test.query.testdata.PostRecordNoArgs;
 import com.lilbaek.simply.test.query.testdata.PostRecordWithConversion;
@@ -13,11 +14,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.dao.TypeMismatchDataAccessException;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -37,9 +38,36 @@ public class QuerySpecTest {
                         SELECT id
                         FROM POST
                         WHERE id = :id
-                        """).param("id", "1")
-                .record(PostRecordFromQuery.class);
+                        """)
+                .param("id", "1")
+                .single(PostRecordFromQuery.class);
         assertEquals("1", record.id());
+    }
+
+    @Test
+    public void getPostRecordAlias() {
+        final var record = client.sql("""
+                        SELECT enabled as ENABLEDALIAS, date as DATEALIAS, type as TYPEALIAS, stars as STARSALIAS
+                        FROM POST
+                        WHERE id = :id
+                        """).param("id", "1")
+                .single(PostRecordAliasFromQuery.class);
+        assertEquals(true, record.enabled());
+        assertEquals(LocalDate.of(2024, 2, 2), record.date());
+        assertEquals(PostType.ARTICLE, record.type());
+        assertEquals(0, BigDecimal.valueOf(8.876432).compareTo(record.stars()));
+    }
+
+    @Test
+    public void getPostRecords() {
+        final var record = client.sql("""
+                        SELECT id
+                        FROM POST
+                        WHERE id IN (:ids) AND enabled = 'Y'
+                        """)
+                .param("ids", List.of("1", "2", "NOT-EXISTING"))
+                .list(PostRecordFromQuery.class);
+        assertEquals(2, record.size());
     }
 
     @Test
@@ -49,7 +77,7 @@ public class QuerySpecTest {
                         FROM POST
                         WHERE id = :id
                         """).param("id", "NOT-EXISTING")
-                .recordOrNull(PostRecordFromQuery.class);
+                .singleOrNull(PostRecordFromQuery.class);
         assertNull(record);
     }
 
@@ -82,7 +110,7 @@ public class QuerySpecTest {
                         FROM POST
                         WHERE id = :id
                         """).param("id", "1")
-                .record(PostRecordWithTransient.class);
+                .single(PostRecordWithTransient.class);
         assertEquals("1", record.id());
         assertNull(record.propNotInQuery());
         assertNull(record.otherPropNotInQuery());
@@ -95,7 +123,7 @@ public class QuerySpecTest {
                         FROM POST
                         WHERE id = :id
                         """).param("id", "1")
-                .record(PostRecordWithConversion.class);
+                .single(PostRecordWithConversion.class);
         assertEquals(true, record.enabled());
         assertEquals(LocalDate.of(2024, 2, 2), record.date());
         assertEquals(PostType.ARTICLE, record.type());
@@ -123,8 +151,20 @@ public class QuerySpecTest {
                         FROM POST
                         WHERE id = :id
                         """).param("id", "6")
-                .value(int.class);
+                .single(int.class);
         assertEquals(89, val);
+    }
+
+
+    @Test
+    void shouldReturnBigDecimalValue() {
+        final var val = client.sql("""
+                        SELECT stars
+                        FROM POST
+                        WHERE id = :id
+                        """).param("id", "6")
+                .single(BigDecimal.class);
+        assertEquals(0, new BigDecimal("118.876432").compareTo(val));
     }
 
     @Test
@@ -134,18 +174,18 @@ public class QuerySpecTest {
                         FROM POST
                         WHERE id = :id
                         """).param("id", "9999")
-                .valueOrNull(Integer.class);
+                .singleOrNull(Integer.class);
         assertNull(val);
     }
 
     @Test
     void shouldThrowErrorWhenNoResults() {
         assertThrows(EmptyResultDataAccessException.class, () -> client.sql("""
-                       SELECT enabled, date, type, stars
-                        FROM POST
-                        WHERE id = :id
-                        """).param("id", "9999")
-                .record(PostRecordWithConversion.class));
+                        SELECT enabled, date, type, stars
+                         FROM POST
+                         WHERE id = :id
+                         """).param("id", "9999")
+                .single(PostRecordWithConversion.class));
     }
 
     @Test
@@ -154,7 +194,7 @@ public class QuerySpecTest {
                         SELECT enabled, date, type, stars
                         FROM POST
                         """).param("id", "9999")
-                .record(PostRecordWithConversion.class));
+                .single(PostRecordWithConversion.class));
     }
 
     @Test
@@ -163,27 +203,7 @@ public class QuerySpecTest {
                         SELECT enabled, date, type, stars
                         FROM POST
                         """).param("id", "9999")
-                .recordOrNull(PostRecordWithConversion.class));
-    }
-
-    @Test
-    void shouldThrowErrorWhenValueNotSimpleNull() {
-        assertThrows(TypeMismatchDataAccessException.class, () -> client.sql("""
-                        SELECT time_to_read
-                        FROM POST
-                        WHERE id = :id
-                        """).param("id", "1")
-                .valueOrNull(PostRecordWithConversion.class));
-    }
-
-    @Test
-    void shouldThrowErrorWhenValueNotSimple() {
-        assertThrows(TypeMismatchDataAccessException.class, () -> client.sql("""
-                        SELECT time_to_read
-                        FROM POST
-                        WHERE id = :id
-                        """).param("id", "1")
-                .value(PostRecordWithConversion.class));
+                .singleOrNull(PostRecordWithConversion.class));
     }
 
     @Test
@@ -193,7 +213,7 @@ public class QuerySpecTest {
                         FROM POST
                         WHERE id = :id
                         """).param("id", "1")
-                .record(PostRecordWithWrongParams.class));
+                .single(PostRecordWithWrongParams.class));
         final var expectedMessage = "takes more arguments than returned";
         final var actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));
@@ -206,7 +226,7 @@ public class QuerySpecTest {
                         FROM POST
                         WHERE id = :id
                         """).param("id", "1")
-                .record(PostRecordNoArgs.class));
+                .single(PostRecordNoArgs.class));
         final var expectedMessage = "You need to have a minimum of 1 argument in your constructor";
         final var actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));

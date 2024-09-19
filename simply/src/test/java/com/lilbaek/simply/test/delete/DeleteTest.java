@@ -81,6 +81,6 @@ public class DeleteTest {
 
     private Post getRecordFromDb(final String id) {
         return client.sql(SQL_SELECT).param("id", id)
-                .recordOrNull(Post.class);
+                .singleOrNull(Post.class);
     }
 }

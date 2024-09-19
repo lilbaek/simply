@@ -8,13 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.lilbaek.simply.sql.MetadataHelper.getColumnName;
+
 public class SelectBuilder extends BaseBuilder {
     private static final Map<Class<?>, Metadata> mapperCache = new ConcurrentHashMap<>();
 
     private SelectBuilder() {
     }
 
-    public static <T> SqlStatement selectStatement(Class<T> cls, final Object conditions) {
+    public static <T> SqlStatement selectStatement(final Class<T> cls, final Object conditions) {
         try {
             final var metadata = getMetadata(cls);
             if (!BeanUtils.isSimpleProperty(conditions.getClass())) {
@@ -32,11 +34,11 @@ public class SelectBuilder extends BaseBuilder {
     private static SqlStatement buildStatementWithIdWhereCondition(final Metadata metadata,
                                                                    final ArrayList<Object> values) {
         final var first = metadata.properties.stream().filter(x -> x.idAnnotation() != null).findFirst().orElseThrow();
-        return new SqlStatement(metadata.statement + first.name() + " = ?", values);
+        return new SqlStatement(metadata.statement + getColumnName(first) + " = ?", values);
     }
 
-    private static Metadata getMetadata(Class<?> cls) {
-        final var metadata = mapperCache.computeIfAbsent(cls, key -> {
+    private static Metadata getMetadata(final Class<?> cls) {
+        return mapperCache.computeIfAbsent(cls, key -> {
             try {
                 return createMetadata(cls);
             } catch (final InvocationTargetException | InstantiationException | IllegalAccessException |
@@ -44,7 +46,6 @@ public class SelectBuilder extends BaseBuilder {
                 throw new RuntimeException("Could not create metadata: " + cls.getName(), e);
             }
         });
-        return metadata;
     }
 
     private static Metadata createMetadata(final Class<?> instance) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {

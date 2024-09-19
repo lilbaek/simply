@@ -117,6 +117,6 @@ public class UpdateTest {
 
     private Post getRecordFromDb(final String id) {
         return client.sql(SQL_SELECT).param("id", id)
-                .record(Post.class);
+                .single(Post.class);
     }
 }

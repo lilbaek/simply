@@ -30,10 +30,10 @@ public class InsertBuilder extends BaseBuilder {
     }
 
     private static Metadata createMetadata(final Class<?> instance) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
-        final var entityAnnotation = getInstanceTableAnnotation(instance);
+        final var tableAnnotation = getInstanceTableAnnotation(instance);
         final var properties = getInstanceProperties(instance);
         final var props = properties.entrySet();
-        final String statement = "INSERT INTO {schema}" + entityAnnotation.name() + "(" +
+        final String statement = "INSERT INTO {schema}" + tableAnnotation.name() + "(" +
                 String.join(",", props.stream().filter(MetadataHelper::filterTransient).map(MetadataHelper::getColumnName).toList()) +
                 ") VALUES (" +
                 String.join(",", props.stream().filter(MetadataHelper::filterTransient).map(stringPropertyEntry -> "?").toList()) +

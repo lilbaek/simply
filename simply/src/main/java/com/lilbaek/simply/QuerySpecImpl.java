@@ -1,6 +1,6 @@
 package com.lilbaek.simply;
 
-import dk.bankdata.kfa.simply.sql.ResultToRecordTransformer;
+import com.lilbaek.simply.sql.ResultToRecordTransformer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -109,17 +109,17 @@ public class QuerySpecImpl implements QuerySpec {
         final var aliasToClassResultTransformer = new ResultToRecordTransformer<>(cls);
         logger.logStatement(sql, parms);
         final var queryResult = query.query();
-        final var metaData = queryResult.rowSet().getMetaData();
+        final var sqlRowSet = queryResult.rowSet();
+        final var metaData = sqlRowSet.getMetaData();
         final int columnCount = metaData.getColumnCount();
         final var labels = new String[columnCount];
         for (int i = 0; i < columnCount; ++i) {
             // We use getColumnLabel as we want the alias names and not the column names
             labels[i] = metaData.getColumnLabel(i + 1);
         }
-        final var rows = queryResult.listOfRows();
         final var result = new ArrayList<T>();
-        for (final var row : rows) {
-            result.add(aliasToClassResultTransformer.map(row, labels));
+        while (sqlRowSet.next()) {
+            result.add(aliasToClassResultTransformer.map(sqlRowSet, labels));
         }
         return result;
     }

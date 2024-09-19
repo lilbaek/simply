@@ -1,7 +1,7 @@
 package com.lilbaek.simply;
 
 import com.lilbaek.simply.sql.SchemaReplacer;
-import com.lilbaek.simply.sql.StatementLogger;
+import io.micrometer.common.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,9 +15,15 @@ public class SimplyConfiguration {
     private final boolean showSql;
 
     public SimplyConfiguration(final JdbcClient jdbcClient, final @Value("${simply.datasource.name:}") String schema,
+                               final @Value("${simply.datasource.default_schema:}") String defaultSchema,
                                final @Value("${simply.show-sql:false}") boolean showSql) {
+
+        if (StringUtils.isNotBlank(schema)) {
+            this.schema = schema;
+        } else {
+            this.schema = defaultSchema;
+        }
         this.jdbcClient = jdbcClient;
-        this.schema = schema;
         this.showSql = showSql;
     }
 
@@ -32,7 +38,7 @@ public class SimplyConfiguration {
     }
 
     @Bean
-    public StatementLogger simplyStatementLogger() {
-        return new StatementLogger(showSql);
+    public Logger simplyStatementLogger() {
+        return new Logger(showSql);
     }
 }

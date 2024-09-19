@@ -32,7 +32,7 @@ public abstract class BaseBuilder {
     }
 
     protected static StringBuilder getConditionFromColumns(final Object instance, final ArrayList<Object> values, final Collection<Property> properties, final boolean onlyIdColumns)
-                    throws NoSuchFieldException, IllegalAccessException {
+            throws NoSuchFieldException, IllegalAccessException {
         boolean first = true;
         final var condition = new StringBuilder();
         for (final Property property : properties) {
@@ -54,7 +54,7 @@ public abstract class BaseBuilder {
             throws NoSuchFieldException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
         if (BeanUtils.isSimpleProperty(conditions.getClass())) {
             throw new TypeMismatchDataAccessException(
-                            conditions.getClass().getName() + " cannot be used as condition for " + cls.getName());
+                    conditions.getClass().getName() + " cannot be used as condition for " + cls.getName());
         }
         final var properties = MetadataHelper.getProperties(conditions.getClass());
         final var sqlCondition = getConditionFromColumns(conditions, values, properties.values(), false);

@@ -10,7 +10,6 @@ import org.springframework.test.context.jdbc.Sql;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
@@ -33,15 +32,8 @@ public class SelectSpecTest {
     }
 
     @Test
-    public void findByIdOrNullPrimitive() {
-        final var record = client.findByIdOrNull("NOT-EXISTING", Post.class);
-        assertNull(record);
-    }
-
-    @Test
     public void findByIdOptionalPrimitive() {
         final var record = client.findByIdOptional("NOT-EXISTING", Post.class);
         assertTrue(record.isEmpty());
     }
-
 }

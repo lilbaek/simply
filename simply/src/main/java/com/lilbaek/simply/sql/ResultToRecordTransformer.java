@@ -92,7 +92,7 @@ public class ResultToRecordTransformer<T> {
             throw new InvalidDataAccessApiUsageException(
                     "The constructor " + resultClass.getTypeName() + " takes no arguments. You need to have a minimum of 1 argument in your constructor");
         }
-        return new Metadata(columns, propertyMetadata, aliasAsList, constructor);
+        return new Metadata(List.of(columns), propertyMetadata, aliasAsList, constructor);
     }
 
     private String getConstructorParamName(final Property match) {
@@ -106,14 +106,21 @@ public class ResultToRecordTransformer<T> {
     }
 
     private void check(final String[] aliases, final Metadata metadata) {
-        if (!Arrays.equals(aliases, metadata.columns)) {
+        if (aliases.length != metadata.columns.size()) {
             throw new IllegalStateException(
-                    "aliases are different from what is cached; aliases=" + Arrays.asList(aliases) +
-                            " cached=" + Arrays.asList(metadata.columns));
+                    "aliases count different from what is cached; aliases=" + Arrays.asList(aliases) +
+                            " cached=" + List.of(metadata.columns));
+        }
+        for (final String alias : aliases) {
+            if (!metadata.columns.contains(alias)) {
+                throw new IllegalStateException(
+                        "aliases are different from what is cached; aliases=" + Arrays.asList(aliases) +
+                                " cached=" + List.of(metadata.columns));
+            }
         }
     }
 
-    record Metadata(String[] columns,
+    record Metadata(List<String> columns,
                     List<Property> properties,
                     List<String> columnsAsList,
                     Constructor<?> constructor) {

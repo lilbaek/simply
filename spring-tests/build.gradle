@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.2'
-	id 'io.spring.dependency-management' version '1.1.4'
+	id("org.springframework.boot") version "3.3.2"
+	id 'io.spring.dependency-management' version '1.1.6'
 }
 
 group = 'com.lilbaek.simply.test'
@@ -17,13 +17,12 @@ repositories {
 dependencies {
 	implementation project(":simply")
 
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-	implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-jdbc")
+	implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
 
-	runtimeOnly "org.hsqldb:hsqldb"
-	runtimeOnly 'com.ibm.db2:jcc'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation("org.hsqldb:hsqldb")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 test {

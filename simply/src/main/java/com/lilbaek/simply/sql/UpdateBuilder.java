@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.lilbaek.simply.sql.MetadataHelper.getColumnName;
-
 public class UpdateBuilder extends BaseBuilder {
     private static final Map<Class<?>, Metadata> mapperCache = new ConcurrentHashMap<>();
 
@@ -30,8 +28,8 @@ public class UpdateBuilder extends BaseBuilder {
         }
     }
 
-    private static Metadata getMetadata(Class<?> cls) {
-        final var metadata = mapperCache.computeIfAbsent(cls, key -> {
+    private static Metadata getMetadata(final Class<?> cls) {
+        return mapperCache.computeIfAbsent(cls, key -> {
             try {
                 return createMetadata(cls);
             } catch (final InvocationTargetException | InstantiationException | IllegalAccessException |
@@ -39,10 +37,9 @@ public class UpdateBuilder extends BaseBuilder {
                 throw new RuntimeException("Could not create metadata: " + cls.getName(), e);
             }
         });
-        return metadata;
     }
 
-    private static SqlStatement buildStatementWithIdWhereCondition(final Object instance, final UpdateBuilder.Metadata metadata,
+    private static SqlStatement buildStatementWithIdWhereCondition(final Object instance, final Metadata metadata,
                                                                    final ArrayList<Object> values)
             throws NoSuchFieldException, IllegalAccessException {
         final var condition = getConditionFromColumns(instance, values, metadata.properties, true);
@@ -50,11 +47,11 @@ public class UpdateBuilder extends BaseBuilder {
     }
 
     private static Metadata createMetadata(final Class<?> instance) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
-        final var entityAnnotation = getInstanceTableAnnotation(instance);
+        final var tableAnnotation = getInstanceTableAnnotation(instance);
         final var properties = getInstanceProperties(instance);
         final var props = properties.entrySet();
-        final String statement = "UPDATE {schema}" + entityAnnotation.name() + " SET " +
-                String.join(",", props.stream().filter(MetadataHelper::filterTransientAndId).map(x -> getColumnName(x) + " = ?").toList()) +
+        final String statement = "UPDATE {schema}" + tableAnnotation.name() + " SET " +
+                String.join(",", props.stream().filter(MetadataHelper::filterTransientAndId).map(x -> MetadataHelper.getColumnName(x) + " = ?").toList()) +
                 " WHERE ";
         return new Metadata(properties.values().stream().toList(), statement);
     }

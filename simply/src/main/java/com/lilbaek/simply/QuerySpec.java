@@ -15,46 +15,56 @@ public interface QuerySpec {
     QuerySpec param(String name, @Nullable Object value);
 
     /**
-     * Transforms a query result to a Java record.
-     * Supports @Column, @Convert and @Transient annotations
+     * Transforms a query result to a Java record or a primitive type.
+     * Supports @Column, @Convert and @Transient annotations for Java records
      *
-     * @param cls   result type
+     * @param cls result type
      */
-    <T> T record(final Class<T> cls);
+    <T> T single(final Class<T> cls);
 
     /**
-     * Returns a simple type
-     */
-    <T> T value(final Class<T> cls);
-
-    /**
-     * Returns a simple type or null
-     */
-    <T> T valueOrNull(final Class<T> cls);
-
-    /**
-     * Transforms a query result to a Java record.
-     * Supports @Column, @Convert and @Transient annotations
+     * Transforms a query result to a Java record, a primitive type or null
+     * Supports @Column, @Convert and @Transient annotations for Java records
      *
-     * @param cls   result type
+     * @param cls result type
      */
-    <T> T recordOrNull(final Class<T> cls);
+    <T> T singleOrNull(final Class<T> cls);
 
     /**
-     * Transforms a query result to a Java record wrapped in Optional.
-     * Supports @Column, @Convert and @Transient annotations
+     * Transforms a query result to a Java record or a primitive type wrapped in Optional.
+     * Supports @Column, @Convert and @Transient annotations for Java records
      *
-     * @param cls   result type
+     * @param cls result type
      */
     <T> Optional<T> optional(final Class<T> cls);
 
     /**
-     * Transforms a query result to list of Java records.
-     * Supports @Column, @Convert and @Transient annotations
+     * Transforms a query result to list of <T>
+     * Supports @Column, @Convert and @Transient annotations for Java records
      *
-     * @param cls   result type
+     * @param cls result type
      */
     <T> List<T> list(final Class<T> cls);
+
+    /***
+     * Updates one or more records. Returns affected count.
+     */
+    int update();
+
+    /***
+     * Updates a single record. Throws exception if modified count != 1
+     */
+    void updateSingle();
+
+    /***
+     * Deletes one or more records. Returns deleted count.
+     */
+    int delete();
+
+    /***
+     * Deletes a single record. Throws exception if deleted count != 1
+     */
+    void deleteSingle();
 
     /**
      * Returns the underlying JdbcClient.StatementSpec
