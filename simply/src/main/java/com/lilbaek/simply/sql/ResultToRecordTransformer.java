@@ -1,6 +1,7 @@
 package com.lilbaek.simply.sql;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -9,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 /**
  * Wraps the sql result in a constructor call for usage with Java Records.
@@ -23,7 +23,7 @@ public class ResultToRecordTransformer<T> {
         this.resultClass = resultClass;
     }
 
-    public T map(final Map<String, Object> data, final String[] columns) {
+    public T map(final SqlRowSet data, final String[] columns) {
         try {
             final var metadata = mapperCache.computeIfAbsent(resultClass, key -> {
                 try {
@@ -48,12 +48,12 @@ public class ResultToRecordTransformer<T> {
         }
     }
 
-    private Object getConstructorValue(final Map<String, Object> tuple, final Property prop, final Metadata metadata) {
+    private Object getConstructorValue(final SqlRowSet tuple, final Property prop, final Metadata metadata) {
         final var index = metadata.columnsAsList.indexOf(prop.name());
         if (index == -1) {
             throw new IllegalArgumentException(prop.name() + " does not exist as a column in the result");
         }
-        final var sqlValue = tuple.get(prop.name());
+        final var sqlValue = tuple.getObject(prop.name());
         if (sqlValue == null) {
             return ConversionHelper.handleNullValue(prop);
         } else if (prop.converter() != null) {
@@ -106,21 +106,14 @@ public class ResultToRecordTransformer<T> {
     }
 
     private void check(final String[] aliases, final Metadata metadata) {
-        if (aliases.length != metadata.columns.size()) {
+        if (!Arrays.equals(aliases, metadata.columns)) {
             throw new IllegalStateException(
-                    "aliases count different from what is cached; aliases=" + Arrays.asList(aliases) +
-                            " cached=" + List.of(metadata.columns));
-        }
-        for (final String alias : aliases) {
-            if (!metadata.columns.contains(alias)) {
-                throw new IllegalStateException(
-                        "aliases are different from what is cached; aliases=" + Arrays.asList(aliases) +
-                                " cached=" + List.of(metadata.columns));
-            }
+                    "aliases are different from what is cached; aliases=" + Arrays.asList(aliases) +
+                            " cached=" + Arrays.asList(metadata.columns));
         }
     }
 
-    record Metadata(List<String> columns,
+    record Metadata(String[] columns,
                     List<Property> properties,
                     List<String> columnsAsList,
                     Constructor<?> constructor) {
