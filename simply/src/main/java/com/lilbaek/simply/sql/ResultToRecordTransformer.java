@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * Wraps the sql result in a constructor call for usage with Java Records.
@@ -105,14 +106,21 @@ public class ResultToRecordTransformer<T> {
     }
 
     private void check(final String[] aliases, final Metadata metadata) {
-        if (!Arrays.equals(aliases, metadata.columns)) {
+        if (aliases.length != metadata.columns.size()) {
             throw new IllegalStateException(
-                    "aliases are different from what is cached; aliases=" + Arrays.asList(aliases) +
-                            " cached=" + Arrays.asList(metadata.columns));
+                    "aliases count different from what is cached; aliases=" + Arrays.asList(aliases) +
+                            " cached=" + List.of(metadata.columns));
+        }
+        for (final String alias : aliases) {
+            if (!metadata.columns.contains(alias)) {
+                throw new IllegalStateException(
+                        "aliases are different from what is cached; aliases=" + Arrays.asList(aliases) +
+                                " cached=" + List.of(metadata.columns));
+            }
         }
     }
 
-    record Metadata(String[] columns,
+    record Metadata(List<String> columns,
                     List<Property> properties,
                     List<String> columnsAsList,
                     Constructor<?> constructor) {
